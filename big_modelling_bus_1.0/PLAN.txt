@@ -1,5 +1,16 @@
 [X] Hello world for models
 
+[ ] Principles
+- Separation of concerns across layers
+- Use packages, but wrap non-standard packages
+
+[ ] Refactor
+- Layer 1: 
+  - Three types 
+    - TConfig
+    - TRepository (FTP)
+    - TEventBus (MQTT)
+    
 [ ] RAW vs Structured Artefacts and not simply "models" vs "files"
     Posting types:
 

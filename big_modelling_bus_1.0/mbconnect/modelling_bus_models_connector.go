@@ -84,7 +84,7 @@ func (b *TModellingBusModelConnector) postModelsJSONDelta(modelsDeltaTopicPath s
 		return
 	}
 
-	deltaOperationsJSON, err := JSONDiff(oldStateJSON, newStateJSON)
+	deltaOperationsJSON, err := jsonDiff(oldStateJSON, newStateJSON)
 	if err != nil {
 		b.ModellingBusConnector.errorReporter("Something went wrong running the JSON diff", err)
 		return
@@ -117,7 +117,7 @@ func (b *TModellingBusModelConnector) processModelsJSONDeltaPosting(currentJSONS
 		return currentJSONState, false
 	}
 
-	newJSONState, err := JSONApplyPatch(currentJSONState, delta.Operations)
+	newJSONState, err := jsonApplyPatch(currentJSONState, delta.Operations)
 	if err != nil {
 		b.ModellingBusConnector.errorReporter("Applying patch didn't work'", err)
 		return currentJSONState, false
@@ -159,15 +159,6 @@ func CreateModellingBusModelConnector(ModellingBusConnector TModellingBusConnect
 
 func (b *TModellingBusModelConnector) PrepareForPosting(ModelID string) {
 	b.ModelID = ModelID
-
-	b.ModellingBusConnector.mkFilePath(b.modelsStateTopicPath(b.ModelID))
-	b.ModellingBusConnector.mkEventPath(b.modelsStateTopicPath(b.ModelID))
-
-	b.ModellingBusConnector.mkFilePath(b.modelsConsideringTopicPath(b.ModelID))
-	b.ModellingBusConnector.mkEventPath(b.modelsConsideringTopicPath(b.ModelID))
-
-	b.ModellingBusConnector.mkFilePath(b.modelsUpdateTopicPath(b.ModelID))
-	b.ModellingBusConnector.mkEventPath(b.modelsUpdateTopicPath(b.ModelID))
 }
 
 func (b *TModellingBusModelConnector) PostConsidering(consideringStateJSON []byte, err error) {

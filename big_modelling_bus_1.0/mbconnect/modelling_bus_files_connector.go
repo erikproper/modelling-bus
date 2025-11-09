@@ -14,6 +14,7 @@
 package mbconnect
 
 import (
+	"fmt"
 	"path/filepath"
 )
 
@@ -32,9 +33,9 @@ func (b *TModellingBusConnector) PostFile(context, format, localFilePath string)
 		"/" + context +
 		"/" + format
 
-	b.mkFilePath(topicPath)
 	timestamp := b.GetTimestamp()
 	fileName := timestamp + filepath.Ext(localFilePath)
 
+	fmt.Println("-----")
 	b.postRawFile(topicPath, fileName, localFilePath, timestamp)
 }

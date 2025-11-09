@@ -1,7 +1,8 @@
 /*
  *
  * Package: mbconnect
- * Module:  jsonoperations
+ * Layer:   2 (or higher??)
+ * Module:  json_operations
  *
  * ..... ... .. .
  *
@@ -19,7 +20,7 @@ import (
 	"github.com/wI2L/jsondiff"
 )
 
-func JSONDiff(sourceJSON, targetJSON []byte) (json.RawMessage, error) {
+func jsonDiff(sourceJSON, targetJSON []byte) (json.RawMessage, error) {
 	deltaOperations, err := jsondiff.CompareJSON(sourceJSON, targetJSON)
 	if err != nil {
 		return nil, err
@@ -28,7 +29,7 @@ func JSONDiff(sourceJSON, targetJSON []byte) (json.RawMessage, error) {
 	return json.Marshal(deltaOperations)
 }
 
-func JSONApplyPatch(sourceJSON, patchJSON []byte) (json.RawMessage, error) {
+func jsonApplyPatch(sourceJSON, patchJSON []byte) (json.RawMessage, error) {
 	patch, err := jsonpatch.DecodePatch(patchJSON)
 	if err != nil {
 		return nil, err
