@@ -37,8 +37,8 @@ type (
 )
 
 type tRepositoryEvent struct {
-	Server        string `json:"server,omitempty"`
-	Port          string `json:"port,omitempty"`
+//	Server        string `json:"server,omitempty"`
+//	Port          string `json:"port,omitempty"`
 	FilePath      string `json:"file path,omitempty"`
 	FileExtension string `json:"file extension,omitempty"`
 }
@@ -109,8 +109,8 @@ func (r *tModellingBusRepositoryConnector) addFile(topicPath, fileName, fileExte
 	}
 	client.Close()
 
-	repositoryEvent.Server = r.ftpServer
-	repositoryEvent.Port = r.ftpPort
+//	repositoryEvent.Server = r.ftpServer
+//	repositoryEvent.Port = r.ftpPort
 	repositoryEvent.FilePath = r.ftpAgentRoot + "/" + topicPath + "/" + fileName
 	repositoryEvent.FileExtension = fileExtension
 
@@ -150,7 +150,8 @@ func (r *tModellingBusRepositoryConnector) addJSONAsFile(topicPath string, json 
 
 func (r *tModellingBusRepositoryConnector) getFile(repositoryEvent tRepositoryEvent, timestamp string) string {
 	localFileName := r.ftpLocalWorkDirectory + "/" + timestamp + repositoryEvent.FileExtension
-	serverConnection := repositoryEvent.Server + ":" + repositoryEvent.Port
+//	serverConnection := repositoryEvent.Server + ":" + repositoryEvent.Port
+	serverConnection := r.ftpServer+ ":" + r.ftpPort
 
 	client, err := goftp.DialConfig(goftp.Config{}, serverConnection)
 	if err != nil {
