@@ -170,10 +170,10 @@ func CreateCDMModel() TCDMModel {
  *
  */
 
-// Note: One ModellingBusConnector can be used for different models of different kinds.
 func CreateCDMPoster(ModellingBusConnector mbconnect.TModellingBusConnector, modelID string) TCDMModel {
 	CDMPosterModel := CreateCDMModel()
 
+	// Note: One ModellingBusConnector can be used for different artefacts with different json versions.
 	CDMPosterModel.ModellingBusArtefactPoster = mbconnect.CreateModellingBusArtefactConnector(ModellingBusConnector, ModelJSONVersion)
 	CDMPosterModel.ModellingBusArtefactPoster.PrepareForPosting(modelID)
 

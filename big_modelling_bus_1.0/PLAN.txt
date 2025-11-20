@@ -39,6 +39,8 @@ func (b *TModellingBusConnector) cleanFTPPath(topicPath string) {
 
 [ ] Clean listener code
 
+[ ] Document 
+
 [ ] Principles
 - Separation of concerns across layers
 - Use packages, but wrap non-standard packages
@@ -48,7 +50,10 @@ func (b *TModellingBusConnector) cleanFTPPath(topicPath string) {
     - TConfig
     - TRepository (FTP)
     - TEventBus (MQTT)
-    
+
+[ ] Commandline 
+    - files post/listen
+    - json  post/listen
 
 [ ] https://mermaid.live/
 

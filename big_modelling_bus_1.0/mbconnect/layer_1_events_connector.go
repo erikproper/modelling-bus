@@ -46,7 +46,8 @@ func (e *tModellingBusEventsConnector) connectionLostHandler(c mqtt.Client, err 
 func (e *tModellingBusEventsConnector) connectToMQTT() {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker("tcp://" + e.mqttBroker + ":" + e.mqttPort)
-	opts.SetClientID("mqtt-client-" + e.agentID)
+	// Apparently not needed
+	// opts.SetClientID("mqtt-client-" + e.agentID)
 	opts.SetUsername(e.mqttUser)
 	opts.SetPassword(e.mqttPassword)
 	opts.SetConnectionLostHandler(e.connectionLostHandler)
@@ -106,7 +107,7 @@ func createModellingBusEventsConnector(topicBase, agentID string, configData *TC
 	e.mqttPassword = configData.GetValue("mqtt", "password").String()
 	e.mqttRoot = configData.GetValue("mqtt", "prefix").String() + "/" + topicBase
 	e.mqttMaxMessageSize = configData.GetValue("mqtt", "max_message_size").IntWithDefault(mqttMaxMessageSizeDefault)
-
+	
 	e.connectToMQTT()
 
 	return &e
