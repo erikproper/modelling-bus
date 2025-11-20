@@ -1,5 +1,4 @@
 [ ] CDM layaer cleaning
-[ ] CDM should have its own ID generator. Separation of concerns! Wel ?? WHY NOT use smae generatot?
 
 [ ] ModellingBusConnector.DeleteRawArtefact("context", "golang", "main.go")
 ==> Delete files ....
@@ -55,17 +54,10 @@ func (b *TModellingBusConnector) cleanFTPPath(topicPath string) {
     - files post/listen
     - json  post/listen
 
-[ ] https://mermaid.live/
-
 [ ] Keep alive at MQTT level. Laptop seems to drop the connection. 
     => https://stackoverflow.com/questions/43759445/how-i-can-check-if-i-lose-connection-with-mqtt-broker 
 
-[ ] Cleaning functionality
-    - reportError based on lower level ones. Allow for just the message, and string
-    - jsonoperations as modelling_bus module?
-    - json.Marshal(m) into jsonoperations + error message??
-
-[ ] Document & clean code
+[ ] https://mermaid.live/
 
 [ ] Enable links between models. Does not need code on the bus side.  
     This is controlled by the poster. Which can simply do this by having an external reference of an element.

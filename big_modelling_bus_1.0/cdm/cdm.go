@@ -7,7 +7,7 @@
  *
  * Creator: Henderik A. Proper (e.proper@acm.org), TU Wien, Austria
  *
- * Version of: XX.10.2025
+ * Version of: XX.11.2025
  *
  */
 
@@ -148,7 +148,7 @@ func (m *TCDMModel) AddRelationTypeReading(relationType string, stringsAndInvolv
 
 	return readingID
 	// Does require a check to see if all InvolvementTypesss of the relation have been used ... and used only once
-	// But ... as this is only "Hello World" for now, we won't do so yet.
+	// But ... as this is only "Hello World" for now, so we won't do so yet.
 }
 
 /*
