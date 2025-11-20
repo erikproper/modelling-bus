@@ -1,5 +1,3 @@
-[ ] CDM layaer cleaning
-
 [ ] ModellingBusConnector.DeleteRawArtefact("context", "golang", "main.go")
 ==> Delete files ....
 ==> Events and files
