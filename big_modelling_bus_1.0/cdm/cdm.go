@@ -166,7 +166,7 @@ func CreateCDMModel() TCDMModel {
 
 /*
  *
- * Posting models to the bus
+ * Posting models to the artefactBus
  *
  */
 
@@ -194,7 +194,7 @@ func (m *TCDMModel) PostConsidering() {
 
 /*
  *
- * Reading models from the bus
+ * Reading models from the artefactBus
  *
  */
 
@@ -205,23 +205,23 @@ func CreateCDMListener(ModellingBusConnector mbconnect.TModellingBusConnector) m
 	return ModellingBusCDMModelListener
 }
 
-func (m *TCDMModel) GetStateFromBus(bus mbconnect.TModellingBusArtefactConnector) bool {
+func (m *TCDMModel) GetStateFromBus(artefactBus mbconnect.TModellingBusArtefactConnector) bool {
 	m.Clean()
-	err := json.Unmarshal(bus.ArtefactCurrentContent, m)
+	err := json.Unmarshal(artefactBus.CurrentContent, m)
 
 	return err == nil
 }
 
-func (m *TCDMModel) GetUpdatedFromBus(bus mbconnect.TModellingBusArtefactConnector) bool {
+func (m *TCDMModel) GetUpdatedFromBus(artefactBus mbconnect.TModellingBusArtefactConnector) bool {
 	m.Clean()
-	err := json.Unmarshal(bus.ArtefactUpdatedContent, m)
+	err := json.Unmarshal(artefactBus.UpdatedContent, m)
 
 	return err == nil
 }
 
-func (m *TCDMModel) GetConsideredFromBus(bus mbconnect.TModellingBusArtefactConnector) bool {
+func (m *TCDMModel) GetConsideredFromBus(artefactBus mbconnect.TModellingBusArtefactConnector) bool {
 	m.Clean()
-	err := json.Unmarshal(bus.ArtefactConsideredContent, m)
+	err := json.Unmarshal(artefactBus.ConsideredContent, m)
 
 	return err == nil
 }

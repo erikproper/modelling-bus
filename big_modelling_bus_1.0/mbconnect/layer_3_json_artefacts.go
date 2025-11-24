@@ -28,14 +28,13 @@ const (
 type (
 	TModellingBusArtefactConnector struct {
 		ModellingBusConnector TModellingBusConnector
-		Timestamp             string `json:"timestamp"`
 		JSONVersion           string `json:"json version"`
 		ArtefactID            string `json:"artefact id"`
+		CurrentTimestamp      string `json:"current timestamp"`
 
-		// Externally visible
-		ArtefactCurrentContent    json.RawMessage `json:"content"`
-		ArtefactUpdatedContent    json.RawMessage `json:"-"`
-		ArtefactConsideredContent json.RawMessage `json:"-"`
+		CurrentContent    json.RawMessage `json:"content"`
+		UpdatedContent    json.RawMessage `json:"-"`
+		ConsideredContent json.RawMessage `json:"-"`
 
 		// Before we can communicate updates or considering postings, we must have
 		// communicated the state of the model first
@@ -71,12 +70,13 @@ func (b *TModellingBusArtefactConnector) artefactsConsideringTopicPath(artefactI
 }
 
 type TJSONDelta struct {
-	Operations     json.RawMessage `json:"operations"`
-	Timestamp      string          `json:"timestamp"`
-	StateTimestamp string          `json:"state timestamp"`
+	Operations       json.RawMessage `json:"operations"`
+	Timestamp        string          `json:"timestamp"`
+	CurrentTimestamp string          `json:"current timestamp"`
 }
 
 func (b *TModellingBusArtefactConnector) postDelta(deltaTopicPath string, oldStateJSON, newStateJSON []byte, err error) {
+	// Can we avoid dragging the err in here??
 	if err != nil {
 		b.ModellingBusConnector.reporter.Error("Something went wrong when converting to JSON. %s", err)
 		return
@@ -90,7 +90,7 @@ func (b *TModellingBusArtefactConnector) postDelta(deltaTopicPath string, oldSta
 
 	delta := TJSONDelta{}
 	delta.Timestamp = GetTimestamp()
-	delta.StateTimestamp = b.Timestamp
+	delta.CurrentTimestamp = b.CurrentTimestamp
 	delta.Operations = deltaOperationsJSON
 
 	deltaJSON, err := json.Marshal(delta)
@@ -110,8 +110,7 @@ func (b *TModellingBusArtefactConnector) applyDelta(currentJSONState json.RawMes
 		return currentJSONState, false
 	}
 
-	if delta.StateTimestamp != b.Timestamp {
-		b.ModellingBusConnector.reporter.Error("Received JSON delta out of order.")
+	if delta.CurrentTimestamp != b.CurrentTimestamp {
 		return currentJSONState, false
 	}
 
@@ -122,6 +121,30 @@ func (b *TModellingBusArtefactConnector) applyDelta(currentJSONState json.RawMes
 	}
 
 	return newJSONState, true
+}
+
+func (b *TModellingBusArtefactConnector) updateCurrent(json []byte, currentTimestamp string) {
+	b.CurrentContent = json
+	b.UpdatedContent = json
+	b.ConsideredContent = json
+	b.CurrentTimestamp = currentTimestamp
+}
+
+func (b *TModellingBusArtefactConnector) updateUpdated(json []byte, _ ...string) bool {
+	ok := false
+	b.UpdatedContent, ok = b.applyDelta(b.CurrentContent, json)
+	if ok {
+		b.ConsideredContent = b.UpdatedContent
+	}
+
+	return ok
+}
+
+func (b *TModellingBusArtefactConnector) updateConsidering(json []byte, _ ...string) bool {
+	ok := false
+	b.ConsideredContent, ok = b.applyDelta(b.UpdatedContent, json)
+
+	return ok
 }
 
 /*
@@ -139,24 +162,24 @@ func (b *TModellingBusArtefactConnector) PrepareForPosting(ArtefactID string) {
 }
 
 func (b *TModellingBusArtefactConnector) PostConsidering(consideringStateJSON []byte, err error) {
-	if b.stateCommunicated {
-		b.ArtefactConsideredContent = consideringStateJSON
-
-		b.postDelta(b.artefactsUpdateTopicPath(b.ArtefactID), b.ArtefactCurrentContent, b.ArtefactUpdatedContent, err)
-		b.postDelta(b.artefactsConsideringTopicPath(b.ArtefactID), b.ArtefactUpdatedContent, b.ArtefactConsideredContent, err)
-	} else {
-		b.ModellingBusConnector.reporter.Error("We must always see a state posting, before a considering posting!")
+	if !b.stateCommunicated {
+		b.PostState(b.CurrentContent, err)
 	}
+
+	b.ConsideredContent = consideringStateJSON
+
+	b.postDelta(b.artefactsConsideringTopicPath(b.ArtefactID), b.UpdatedContent, b.ConsideredContent, err)
 }
 
 func (b *TModellingBusArtefactConnector) PostUpdate(updatedStateJSON []byte, err error) {
-	if b.stateCommunicated {
-		b.ArtefactUpdatedContent = updatedStateJSON
-
-		b.postDelta(b.artefactsUpdateTopicPath(b.ArtefactID), b.ArtefactCurrentContent, b.ArtefactUpdatedContent, err)
-	} else {
+	if !b.stateCommunicated {
 		b.PostState(updatedStateJSON, err)
 	}
+
+	b.UpdatedContent = updatedStateJSON
+	b.ConsideredContent = updatedStateJSON
+
+	b.postDelta(b.artefactsUpdateTopicPath(b.ArtefactID), b.CurrentContent, b.UpdatedContent, err)
 }
 
 func (b *TModellingBusArtefactConnector) PostState(stateJSON []byte, err error) {
@@ -165,83 +188,71 @@ func (b *TModellingBusArtefactConnector) PostState(stateJSON []byte, err error) 
 		return
 	}
 
-	b.Timestamp = GetTimestamp()
-	b.ArtefactCurrentContent = stateJSON
+	b.CurrentTimestamp = GetTimestamp()
+	b.CurrentContent = stateJSON
+	b.UpdatedContent = stateJSON
+	b.ConsideredContent = stateJSON
 
 	if err != nil {
 		b.ModellingBusConnector.reporter.Error("Something went wrong JSONing the artefact. %s", err)
 		return
 	}
 
-	b.ModellingBusConnector.postJSON(b.artefactsStateTopicPath(b.ArtefactID), b.JSONVersion, stateJSON, b.Timestamp)
+	b.ModellingBusConnector.postJSON(b.artefactsStateTopicPath(b.ArtefactID), b.JSONVersion, b.CurrentContent, b.CurrentTimestamp)
+
 	b.stateCommunicated = true
 }
 
 /*
- * Listening
+ * Current state listening & getting
  */
 
 func (b *TModellingBusArtefactConnector) ListenForStatePostings(agentID, artefactID string, handler func()) {
-	b.ModellingBusConnector.listenForJSONPostings(agentID, b.artefactsStateTopicPath(artefactID), func(json []byte, timestamp string) {
-		b.ArtefactCurrentContent = json
-		b.ArtefactUpdatedContent = json
-		b.ArtefactConsideredContent = json
-		b.Timestamp = timestamp
-
+	b.ModellingBusConnector.listenForJSONPostings(agentID, b.artefactsStateTopicPath(artefactID), func(json []byte, currentTimestamp string) {
+		b.updateCurrent(json, currentTimestamp)
+		//		b.ModellingBusConnector.reporter.Progress("TT %s", currentTimestamp)
 		handler()
 	})
 }
 
-func (b *TModellingBusArtefactConnector) ListenForUpdatePostings(agentID, artefactID string, handler func()) {
-	b.ModellingBusConnector.listenForJSONPostings(agentID, b.artefactsUpdateTopicPath(artefactID), func(json []byte, timestamp string) {
-		ok := false
-		b.ArtefactUpdatedContent, ok = b.applyDelta(b.ArtefactCurrentContent, json)
-		if ok {
-			b.ArtefactConsideredContent = b.ArtefactUpdatedContent
-
-			handler()
-		}
-	})
-}
-
-func (b *TModellingBusArtefactConnector) ListenForConsideringPostings(agentID, artefactID string, handler func()) {
-	b.ModellingBusConnector.listenForJSONPostings(agentID, b.artefactsConsideringTopicPath(artefactID), func(json []byte, timestamp string) {
-		ok := false
-		b.ArtefactConsideredContent, ok = b.applyDelta(b.ArtefactUpdatedContent, json)
-		if ok {
-			handler()
-		}
-	})
+func (b *TModellingBusArtefactConnector) GetState(agentID, artefactID string) {
+	b.updateCurrent(b.ModellingBusConnector.getJSON(agentID, b.artefactsStateTopicPath(artefactID)))
 }
 
 /*
- * Getting
+ * Updated state listening & getting
  */
 
-func (b *TModellingBusArtefactConnector) GetState(agentID, artefactID string) {
-	b.ModellingBusConnector.listenForJSONPostings(agentID, b.artefactsStateTopicPath(artefactID), func(json []byte, timestamp string) {
-		b.ArtefactCurrentContent = json
-		b.ArtefactUpdatedContent = json
-		b.ArtefactConsideredContent = json
-		b.Timestamp = timestamp
+func (b *TModellingBusArtefactConnector) ListenForUpdatePostings(agentID, artefactID string, handler func()) {
+	b.ModellingBusConnector.listenForJSONPostings(agentID, b.artefactsUpdateTopicPath(artefactID), func(json []byte, _ string) {
+		if b.updateUpdated(json) {
+			handler()
+		}
 	})
 }
 
 func (b *TModellingBusArtefactConnector) GetUpdate(agentID, artefactID string) {
-	b.ModellingBusConnector.listenForJSONPostings(agentID, b.artefactsUpdateTopicPath(artefactID), func(json []byte, timestamp string) {
-		ok := false
-		b.ArtefactUpdatedContent, ok = b.applyDelta(b.ArtefactCurrentContent, json)
-		if ok {
-			b.ArtefactConsideredContent = b.ArtefactUpdatedContent
+	b.GetState(agentID, artefactID)
+
+	b.updateUpdated(b.ModellingBusConnector.getJSON(agentID, b.artefactsUpdateTopicPath(artefactID)))
+}
+
+/*
+ * Considered state listening & getting
+ */
+
+func (b *TModellingBusArtefactConnector) ListenForConsideringPostings(agentID, artefactID string, handler func()) {
+	b.ModellingBusConnector.listenForJSONPostings(agentID, b.artefactsConsideringTopicPath(artefactID), func(json []byte, _ string) {
+		if b.updateConsidering(json) {
+			handler()
 		}
 	})
 }
 
 func (b *TModellingBusArtefactConnector) GetConsidering(agentID, artefactID string) {
-	b.ModellingBusConnector.listenForJSONPostings(agentID, b.artefactsConsideringTopicPath(artefactID), func(json []byte, timestamp string) {
-		//		ok := false
-		b.ArtefactConsideredContent, _ = b.applyDelta(b.ArtefactUpdatedContent, json)
-	})
+	b.GetUpdate(agentID, artefactID)
+
+	b.updateConsidering(b.ModellingBusConnector.getJSON(agentID, b.artefactsConsideringTopicPath(artefactID)))
 }
 
 /*
@@ -252,10 +263,10 @@ func CreateModellingBusArtefactConnector(ModellingBusConnector TModellingBusConn
 	ModellingBusArtefactConnector := TModellingBusArtefactConnector{}
 	ModellingBusArtefactConnector.ModellingBusConnector = ModellingBusConnector
 	ModellingBusArtefactConnector.JSONVersion = JSONVersion
-	ModellingBusArtefactConnector.ArtefactCurrentContent = []byte{}
-	ModellingBusArtefactConnector.ArtefactUpdatedContent = []byte{}
-	ModellingBusArtefactConnector.ArtefactConsideredContent = []byte{}
-	ModellingBusArtefactConnector.Timestamp = GetTimestamp()
+	ModellingBusArtefactConnector.CurrentContent = []byte{}
+	ModellingBusArtefactConnector.UpdatedContent = []byte{}
+	ModellingBusArtefactConnector.ConsideredContent = []byte{}
+	ModellingBusArtefactConnector.CurrentTimestamp = GetTimestamp()
 	ModellingBusArtefactConnector.stateCommunicated = false
 
 	return ModellingBusArtefactConnector

@@ -1,10 +1,12 @@
 #!/bin/bash
 
 function MkIni {
+  mkdir -p /tmp/cdm-$3
+
   (
     echo "experiment         = \"experiment-12.10.2025\""
     echo "agent              = \"cdm-$3\""
-    echo "work               = \"/tmp\""
+    echo "work_folder        = \"/tmp/cdm-$3\""
     echo "latex              = \"test\""
     echo ""
     echo "[ftp]"
@@ -22,7 +24,7 @@ function MkIni {
     echo "port               = 1883"
     echo "broker             = \"$2\""
     echo "prefix             = \"modelling_bus\""
-#    echo "max_message_size   = 1024"
+    echo "load_delay         = 10"
   ) > $1.ini
 }
 
@@ -32,7 +34,7 @@ MkIni tuwien                    dm-lab.big.tuwien.ac.at tester true true
 
 MkIni ../model_listener/mobile  localhost               listener true false
 
-MkIni ../model_listener/home1   frame.fritz.box		home-1 true false
+MkIni ../model_listener/home1   frame.fritz.box         home-1 true false
 MkIni ../model_listener/home2   frame.fritz.box         home-2 true false
 MkIni ../model_listener/home3   frame.fritz.box         home-3 true false
 

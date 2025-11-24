@@ -18,6 +18,13 @@ const (
 	rawArtefactsFilePathElement = "artefacts/file"
 )
 
+func (b *TModellingBusConnector) rawArtefactPath(context, format, fileName string) string {
+	return rawArtefactsFilePathElement +
+		"/" + context +
+		"/" + format +
+		"/" + fileName
+}
+
 /*
  *
  * Externally visible functionality
@@ -25,41 +32,25 @@ const (
  */
 
 func (b *TModellingBusConnector) PostRawArtefact(context, format, fileName, localFilePath string) {
-	topicPath := rawArtefactsFilePathElement +
-		"/" + context +
-		"/" + format +
-		"/" + fileName
-
-	b.postFile(topicPath, localFilePath, GetTimestamp())
+	b.postFile(b.rawArtefactPath(context, format, fileName), localFilePath)
 }
 
 func (b *TModellingBusConnector) ListenForRawArtefactPostings(agentID, context, format, fileName string, postingHandler func(string)) {
-	topicPath := rawArtefactsFilePathElement +
-		"/" + context +
-		"/" + format +
-		"/" + fileName
-		
+	topicPath := b.rawArtefactPath(context, format, fileName)
+
 	b.modellingBusEventsConnector.listenForEvents(agentID, topicPath, func(message []byte) {
-		localFilePath,_ := b.getLinkedFileFromRepository(message, jsonFileName) 
+		localFilePath, _ := b.getLinkedFileFromRepository(message, jsonFileName)
 		postingHandler(localFilePath)
 	})
 }
 
-
 func (b *TModellingBusConnector) GetRawArtefact(agentID, context, format, fileName, localFileName string) string {
-	topicPath := rawArtefactsFilePathElement +
-		"/" + context +
-		"/" + format +
-		"/" + fileName
+	topicPath := b.rawArtefactPath(context, format, fileName)
 
-	localFilePath,_ := b.getFileFromPosting(agentID, topicPath, localFileName)
+	localFilePath, _ := b.getFileFromPosting(agentID, topicPath, localFileName)
 	return localFilePath
 }
 
 func (b *TModellingBusConnector) DeleteRawArtefact(context, format, fileName string) {
-	topicPath := rawArtefactsFilePathElement +
-		"/" + context +
-		"/" + format
-
-	b.deleteFile(topicPath, fileName)
+	b.deletePosting(b.rawArtefactPath(context, format, fileName))
 }

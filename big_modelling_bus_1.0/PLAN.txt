@@ -1,17 +1,12 @@
-[ ] Make it possible to not listen, but pickup latest version
-    That is ... pro-active, and across s/u/c
-    ==> Via subscribe, followed by immediate unsubscribe??
-    ==> Might require a change of strategy in the sense of ALWAYS posting JSONs via the repo
-
 [ ] Local working folder must be a visible attribute. Via function?
-
-[ ] Clean/delete experiment ... path-recurse in MQTT
 
 [ ] Clean listener code
 
-[ ] Document
+[ ] Clean and document code
 
-[ ] Principles
+[ ] Document, document, document ...
+
+Principles
 - Separation of concerns across layers
 - Use packages, but wrap non-standard packages
 
@@ -20,6 +15,12 @@
     - TConfig
     - TRepository (FTP)
     - TEventBus (MQTT)
+
+MQTT's Quality of Service framework offers three distinct reliability levels, catering to various IoT use cases that require different levels of reliability based on their specific requirements.
+At most once (QoS 0): QoS 0 offers "fire and forget" messaging with no acknowledgment from the receiver.
+At least once (QoS 1): QoS 1 ensures that messages are delivered at least once by requiring a PUBACK acknowledgment.
+Exactly once (QoS 2): QoS 2 guarantees that each message is delivered exactly once by using a four-step handshake (PUBLISH, PUBREC, PUBREL, PUBCOMP).
+
 
 [ ] Coordination
 - do/listen
@@ -31,9 +32,11 @@
 Replies with '{ "acknowledgement", "true" }'
 
 
-[ ] Commandline 
+[ ] Commandline calls:
     - files post/listen
     - json  post/listen
+
+[ ]  Clean error messages. Especially "err" messages
 
 [ ] Keep alive at MQTT level. Laptop seems to drop the connection. 
     => https://stackoverflow.com/questions/43759445/how-i-can-check-if-i-lose-connection-with-mqtt-broker 

@@ -39,29 +39,15 @@ func main() {
 
 	// Note: One ModellingBusConnector can be used for different models of different kinds.
 	ModellingBusConnector := mbconnect.CreateModellingBusConnector(configData, reporter)
+	ModellingBusConnector.DeleteExperiment()
 
-	ModellingBusConnector.PostRawArtefact("context", "golang", "test", "main.go")
-	fmt.Println(ModellingBusConnector.GetRawArtefact("cdm-tester", "context", "golang", "test", "local.go"))
-	//	ModellingBusConnector.DeleteRawArtefact("context", "golang", "test.go")
+//		ModellingBusConnector.PostRawArtefact("context", "golang", "test", "main.go")
+//		fmt.Println(ModellingBusConnector.GetRawArtefact("cdm-tester", "context", "golang", "test", "local.go"))
+//		fmt.Println(ModellingBusConnector.GetRawArtefact("cdm-tester", "context", "golang", "test", "local.go"))
+//		ModellingBusConnector.DeleteRawArtefact("context", "golang", "test.go")
 
 	// Note that the 0001 is for local use. No issue to e.g. make this into 0001/02 to indicate version numbers
 	CDMModellingBusPoster := cdm.CreateCDMPoster(ModellingBusConnector, "0001")
-
-	//
-	// NEED to add cleaning/delation primitives.
-	//
-	// CDMModellingBusPoster.ModelsBus.ModellingBusConnector.CleanFTPPath("models/0001/cdm-1.0-1.0/state", "2025-10-19-21-04-14-986464")
-	//	// Remove older versions of the JSON file from the FTP server
-	//	fileInfos, err := client.ReadDir(b.ModellingBusConnectorFTPPath)
-	//	for _, fileInfo := range fileInfos {
-	//		currentName := fileInfo.Name()
-	//		if strings.HasSuffix(currentName, JSONFileExtension) {
-	//			if currentName != fileName {
-	//				client.Delete(b.ModellingBusConnectorFTPPath + "/" + currentName)
-	//			}
-	//		}
-	//	}
-	//
 
 	CDMModellingBusPoster.SetModelName("Empty university")
 

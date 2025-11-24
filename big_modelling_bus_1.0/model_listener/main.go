@@ -285,7 +285,7 @@ func (l *TCDMModelLaTeXWriter) Initialise(config string, reporter *mbconnect.TRe
 		panic("")
 	}
 
-	l.workFolder = cfg.Section("").Key("work").String()
+	l.workFolder = cfg.Section("").Key("work_folder").String()
 	l.latexFile = cfg.Section("").Key("latex").String()
 
 	l.CurrentModel = cdm.CreateCDMModel()
@@ -300,29 +300,26 @@ func CreateCDMLaTeXWriter(config string, reporter *mbconnect.TReporter) TCDMMode
 	return CDMModelLaTeXWriter
 }
 
+func (l *TCDMModelLaTeXWriter) UpdateRendering(CDMModellingBusListener mbconnect.TModellingBusArtefactConnector, message string) {
+	l.reporter.Progress(message)
+	l.CurrentModel.GetStateFromBus(CDMModellingBusListener)
+	l.UpdatedModel.GetUpdatedFromBus(CDMModellingBusListener)
+	l.ConsideredModel.GetConsideredFromBus(CDMModellingBusListener)
+	l.WriteModelToLaTeX()
+	l.CreatePDF()
+}
+
 func (l *TCDMModelLaTeXWriter) ListenForModelPostings(CDMModellingBusListener mbconnect.TModellingBusArtefactConnector, agentId, modelID string) {
 	CDMModellingBusListener.ListenForStatePostings(agentId, modelID, func() {
-		l.reporter.Progress("Received state.")
-		l.CurrentModel.GetStateFromBus(CDMModellingBusListener)
-		l.UpdatedModel.GetUpdatedFromBus(CDMModellingBusListener)
-		l.ConsideredModel.GetConsideredFromBus(CDMModellingBusListener)
-		l.WriteModelToLaTeX()
-		l.CreatePDF()
+		l.UpdateRendering(CDMModellingBusListener, "Received state.")
 	})
 
 	CDMModellingBusListener.ListenForUpdatePostings(agentId, modelID, func() {
-		l.reporter.Progress("Received update.")
-		l.UpdatedModel.GetUpdatedFromBus(CDMModellingBusListener)
-		l.ConsideredModel.GetConsideredFromBus(CDMModellingBusListener)
-		l.WriteModelToLaTeX()
-		l.CreatePDF()
+		l.UpdateRendering(CDMModellingBusListener, "Received update.")
 	})
 
 	CDMModellingBusListener.ListenForConsideringPostings(agentId, modelID, func() {
-		l.reporter.Progress("Received considered.")
-		l.ConsideredModel.GetConsideredFromBus(CDMModellingBusListener)
-		l.WriteModelToLaTeX()
-		l.CreatePDF()
+		l.UpdateRendering(CDMModellingBusListener, "Received considered.")
 	})
 }
 
