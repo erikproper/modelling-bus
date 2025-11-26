@@ -20,10 +20,6 @@ import (
 	"time"
 )
 
-const (
-	maxMessageSizeDefault = 10240
-)
-
 type (
 	tModellingBusEventsConnector struct {
 		agentID,
