@@ -6,11 +6,16 @@
  *
  * This module reads ini files.
  * It gladly uses the functionality provided by "gopkg.in/ini.v1".
- * Nevertheless, having our own configuration loader makes the rest of the mbconnect code less dependent on potential changes
+ * Nevertheless, having our own configuration loader makes the rest of the mbconnect code less dependent on
+ * potential changes to the latter package.
+ * Furthermore, it also allows us to:
+ * - introduce the option of default values (see StringWithDefault, etc) of default values, when no value is
+ *   provided in the ini file.
+ * - use the reporting functionality from the generic_reporting module for progress/error reporting.
  *
- * Creator: Henderik A. Proper (e.proper@acm.org), TU Wien, Austria
+ * Author: Henderik A. Proper (e.proper@acm.org), TU Wien, Austria
  *
- * Version of: XX.11.2025
+ * Version of: 27.11.2025
  *
  */
 
@@ -20,6 +25,8 @@ import (
 	"gopkg.in/ini.v1"
 )
 
+// Since we want to define some extra functions for config data, we need to "wrap" the two existing types as
+// defined by the "gopkg.in/ini.v1" package.
 type (
 	TConfigData struct {
 		configFile *ini.File
@@ -30,13 +37,14 @@ type (
 	}
 )
 
+// Load the configuration file.
 func LoadConfig(filePath string, reporter *TReporter) *TConfigData {
 	var (
 		err        error
 		configData TConfigData
 	)
 
-	reporter.Progress("Using config: %s", filePath)
+	reporter.Progress("Reading config file: %s", filePath)
 	configData.configFile, err = ini.Load(filePath)
 
 	if err != nil {
@@ -46,6 +54,7 @@ func LoadConfig(filePath string, reporter *TReporter) *TConfigData {
 	return &configData
 }
 
+// Get the value from a given section and key from the read config data
 func (c *TConfigData) GetValue(section, key string) *TConfigValue {
 	var configValue TConfigValue
 
@@ -54,6 +63,7 @@ func (c *TConfigData) GetValue(section, key string) *TConfigValue {
 	return &configValue
 }
 
+// Map the config value to a string, using the given default when the config value is empty
 func (v *TConfigValue) StringWithDefault(defaultString string) string {
 	s := v.configKey.String()
 	if s == "" {
@@ -63,10 +73,12 @@ func (v *TConfigValue) StringWithDefault(defaultString string) string {
 	}
 }
 
+// Map the config value to a string, using the empty string as default value
 func (v *TConfigValue) String() string {
 	return v.StringWithDefault("")
 }
 
+// Map the config value to a bool, using the given default when the config value is not provided
 func (v *TConfigValue) BoolWithDefault(defaultBool bool) bool {
 	keyBool, err := v.configKey.Bool()
 	if err == nil {
@@ -76,10 +88,12 @@ func (v *TConfigValue) BoolWithDefault(defaultBool bool) bool {
 	}
 }
 
+// Map the config value to a string, using false as default value
 func (v *TConfigValue) Bool() bool {
 	return v.BoolWithDefault(false)
 }
 
+// Map the config value to an int, using the given default when the config value is not provided
 func (v *TConfigValue) IntWithDefault(defaultInt int) int {
 	keyInt, err := v.configKey.Int()
 	if err == nil {
@@ -89,6 +103,7 @@ func (v *TConfigValue) IntWithDefault(defaultInt int) int {
 	}
 }
 
+// Map the config value to an int, using 0 as default value
 func (v *TConfigValue) Int() int {
 	return v.IntWithDefault(0)
 }
