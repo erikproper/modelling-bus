@@ -24,9 +24,11 @@ type (
 		modellingBusRepositoryConnector *tModellingBusRepositoryConnector
 		modellingBusEventsConnector     *tModellingBusEventsConnector
 
-		agentID string
+		agentID,
+		environmentID string
 
-		reporter *TReporter
+		reporter   *TReporter
+		configData *TConfigData
 	}
 )
 
@@ -119,33 +121,38 @@ func (b *TModellingBusConnector) deletePosting(topicPath string) {
  *
  */
 
-func (b *TModellingBusConnector) DeleteExperiment() {
-	b.modellingBusEventsConnector.deleteExperiment()
-	b.modellingBusRepositoryConnector.deleteExperiment()
+func (b *TModellingBusConnector) DeleteEnvironment(environment ...string) {
+	environmentToDelete := b.environmentID
+	if len(environment) > 0 {
+		environmentToDelete = environment[0]
+	}
+
+	b.reporter.Progress("Deleting environment: %s", environmentToDelete)
+
+	b.modellingBusEventsConnector.deleteEnvironment(environmentToDelete)
+	b.modellingBusRepositoryConnector.deleteEnvironment(environmentToDelete)
 }
 
 func CreateModellingBusConnector(configData *TConfigData, reporter *TReporter) TModellingBusConnector {
-	agentID := configData.GetValue("", "agent").String()
-	experimentID := configData.GetValue("", "experiment").String()
-	topicBase := modellingBusVersion + "/" + experimentID
-
 	modellingBusConnector := TModellingBusConnector{}
+	modellingBusConnector.environmentID = configData.GetValue("", "environment").String()
+	modellingBusConnector.agentID = configData.GetValue("", "agent").String()
+	modellingBusConnector.configData = configData
 	modellingBusConnector.reporter = reporter
-	modellingBusConnector.agentID = agentID
 
 	modellingBusConnector.modellingBusRepositoryConnector =
 		createModellingBusRepositoryConnector(
-			topicBase,
-			agentID,
-			configData,
-			reporter)
+			modellingBusConnector.environmentID,
+			modellingBusConnector.agentID,
+			modellingBusConnector.configData,
+			modellingBusConnector.reporter)
 
 	modellingBusConnector.modellingBusEventsConnector =
 		createModellingBusEventsConnector(
-			topicBase,
-			agentID,
-			configData,
-			reporter)
+			modellingBusConnector.environmentID,
+			modellingBusConnector.agentID,
+			modellingBusConnector.configData,
+			modellingBusConnector.reporter)
 
 	return modellingBusConnector
 }

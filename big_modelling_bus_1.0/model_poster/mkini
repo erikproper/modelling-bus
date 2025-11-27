@@ -4,7 +4,7 @@ function MkIni {
   mkdir -p /tmp/cdm-$3
 
   (
-    echo "experiment         = \"experiment-12.10.2025\""
+    echo "environment        = \"cdm-hello-world\""
     echo "agent              = \"cdm-$3\""
     echo "work_folder        = \"/tmp/cdm-$3\""
     echo "latex              = \"test\""

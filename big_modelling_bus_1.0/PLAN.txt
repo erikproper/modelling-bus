@@ -1,3 +1,9 @@
+[ ] Deleting of Environment for Agent
+
+==> Commandline versions
+
+[ ] CDM listener and poster as cdm rest repos
+
 [ ] Clean listener code
 
 [ ] Clean and document code
@@ -13,6 +19,10 @@ Principles
     - TConfig
     - TRepository (FTP)
     - TEventBus (MQTT)
+
+Info on where to get files is communicated via the bus. This enables flexibility regarding root path, and ftp servers.
+
+Note: We can even have "bridging actors" that operate between two different environments.
 
 MQTT's Quality of Service framework offers three distinct reliability levels, catering to various IoT use cases that require different levels of reliability based on their specific requirements.
 At most once (QoS 0): QoS 0 offers "fire and forget" messaging with no acknowledgment from the receiver.

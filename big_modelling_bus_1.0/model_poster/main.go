@@ -39,7 +39,8 @@ func main() {
 
 	// Note: One ModellingBusConnector can be used for different models of different kinds.
 	ModellingBusConnector := mbconnect.CreateModellingBusConnector(configData, reporter)
-	ModellingBusConnector.DeleteExperiment()
+//	ModellingBusConnector.DeleteEnvironment("experiment-12.10.2025")
+//	ModellingBusConnector.DeleteEnvironment("")
 
 	//		ModellingBusConnector.PostRawArtefact("context", "golang", "test", "main.go")
 	//		fmt.Println(ModellingBusConnector.GetRawArtefact("cdm-tester", "context", "golang", "test", "local.go"))

@@ -26,10 +26,12 @@ type (
 		port,
 		user,
 		server,
+		prefix,
+		agentID,
 		password,
-		agentRoot,
-		experimentRoot,
+		environmentID,
 		localWorkDirectory string
+
 		activeTransfers,
 		singleServerMode bool
 
@@ -44,6 +46,26 @@ type tRepositoryEvent struct {
 	Port      string `json:"port,omitempty"`
 	FilePath  string `json:"file path,omitempty"`
 	Timestamp string `json:"timestamp"`
+}
+
+func (r *tModellingBusRepositoryConnector) localFilePathFor(fileName string) string {
+	return filepath.FromSlash(r.localWorkDirectory + "/" + fileName)
+}
+
+func (r *tModellingBusRepositoryConnector) ftpEnvironmentTopicRootFor(environmentID string) string {
+	return r.prefix + "/" + ModellingBusVersion + "/" + environmentID
+}
+
+func (r *tModellingBusRepositoryConnector) ftptEnvironmentTopicRoot() string {
+	return r.prefix + "/" + ModellingBusVersion + "/" + r.environmentID
+}
+
+func (r *tModellingBusRepositoryConnector) XXXAgentTopicPath(agentID, topicPath string) string {
+	return r.prefix + "/" + ModellingBusVersion + "/" + r.environmentID + "/" + agentID + "/" + topicPath
+}
+
+func (r *tModellingBusRepositoryConnector) ftpTopicPath(topicPath string) string {
+	return r.prefix + "/" + ModellingBusVersion + "/" + r.environmentID + "/" + r.agentID + "/" + topicPath
 }
 
 func (r *tModellingBusRepositoryConnector) ftpConnect() (*goftp.Client, error) {
@@ -79,7 +101,7 @@ func (r *tModellingBusRepositoryConnector) mkRepositoryFilePath(remoteFilePath s
 }
 
 func (r *tModellingBusRepositoryConnector) addFile(topicPath, localFilePath, timestamp string) tRepositoryEvent {
-	remoteFilePath := r.agentRoot + "/" + topicPath
+	remoteFilePath := r.ftpTopicPath(topicPath)
 	remoteFilePayloadPath := remoteFilePath + "/" + filePayload
 
 	r.mkRepositoryFilePath(remoteFilePath)
@@ -134,32 +156,30 @@ func (r *tModellingBusRepositoryConnector) deletePath(deletePath string) {
 }
 
 func (r *tModellingBusRepositoryConnector) deletePostingPath(topicPath string) {
-	r.deletePath(r.agentRoot + "/" + topicPath)
+	r.deletePath(r.ftpTopicPath(topicPath))
 }
 
-func (r *tModellingBusRepositoryConnector) deleteExperiment() {
-	r.deletePath(r.experimentRoot)
+func (r *tModellingBusRepositoryConnector) deleteEnvironment(environment string) {
+	r.deletePath(r.ftpEnvironmentTopicRootFor(environment))
 }
 
 func (r *tModellingBusRepositoryConnector) addJSONAsFile(topicPath string, json []byte, timestamp string) tRepositoryEvent {
 	// Define the temporary local file path
-	localFilePath := r.localWorkDirectory + "/" + jsonFileName
+	localFilePath := r.localFilePathFor(jsonFileName)
 
 	// Create a temporary local file with the JSON record
-	err := os.WriteFile(filepath.FromSlash(localFilePath), json, 0644)
+	err := os.WriteFile(localFilePath, json, 0644)
 	if err != nil {
 		r.reporter.Error("Error writing to temporary file. %s", err)
 	}
 
 	// Cleanup the temporary file afterwards
-	defer os.Remove(filepath.FromSlash(localFilePath))
+	defer os.Remove(localFilePath)
 
 	return r.addFile(topicPath, localFilePath, timestamp)
 }
 
 func (r *tModellingBusRepositoryConnector) getFile(repositoryEvent tRepositoryEvent, fileName string) string {
-	localFileName := r.localWorkDirectory + "/" + fileName
-
 	config := goftp.Config{}
 	config.ActiveTransfers = r.activeTransfers
 	serverConnection := ""
@@ -179,6 +199,8 @@ func (r *tModellingBusRepositoryConnector) getFile(repositoryEvent tRepositoryEv
 		return ""
 	}
 
+	localFileName := r.localFilePathFor(fileName)
+
 	// Download a File to local storage
 	File, err := os.Create(localFileName)
 	if err != nil {
@@ -196,7 +218,7 @@ func (r *tModellingBusRepositoryConnector) getFile(repositoryEvent tRepositoryEv
 	return localFileName
 }
 
-func createModellingBusRepositoryConnector(experimentID, agentID string, configData *TConfigData, reporter *TReporter) *tModellingBusRepositoryConnector {
+func createModellingBusRepositoryConnector(environmentID, agentID string, configData *TConfigData, reporter *TReporter) *tModellingBusRepositoryConnector {
 	r := tModellingBusRepositoryConnector{}
 
 	r.reporter = reporter
@@ -209,8 +231,11 @@ func createModellingBusRepositoryConnector(experimentID, agentID string, configD
 	r.password = configData.GetValue("ftp", "password").String()
 	r.singleServerMode = configData.GetValue("ftp", "single_server_mode").BoolWithDefault(false)
 	r.activeTransfers = configData.GetValue("ftp", "active_transfers").BoolWithDefault(false)
-	r.experimentRoot = configData.GetValue("ftp", "prefix").String() + "/" + experimentID
-	r.agentRoot = r.experimentRoot + "/" + agentID
+	r.prefix = configData.GetValue("ftp", "prefix").String()
+
+	r.agentID = agentID
+	r.environmentID = environmentID
+	r.reporter = reporter
 
 	r.createdPaths = map[string]bool{}
 
