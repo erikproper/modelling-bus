@@ -1,6 +1,6 @@
-[ ] CDM listener and poster as cdm rest repos
+[ ] Reporting levels as flag + flags module
 
-[ ] Reporting levels as flag
+[ ] CDM listener and poster as cdm rest repos
 
 [ ] Commandline versions for "cleanup" 
 
