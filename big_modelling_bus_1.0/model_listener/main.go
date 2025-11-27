@@ -194,7 +194,7 @@ func (l *TCDMModelLaTeXWriter) WriteTypesToLaTeX(sectionTitle string, types map[
 	for tpe, included := range types {
 		if included {
 			if empty {
-				l.WriteLaTeX("\\section{" + sectionTitle + "}\n")
+				l.WriteLaTeX("\\section{%s}\n", sectionTitle)
 				l.WriteLaTeX("\\begin{itemize}\n")
 			} else {
 				l.WriteLaTeX("\n")
@@ -282,7 +282,7 @@ func (l *TCDMModelLaTeXWriter) Initialise(config string, reporter *mbconnect.TRe
 
 	cfg, err := ini.Load(config)
 	if err != nil {
-		l.reporter.Error("Failed to read config file:", err)
+		l.reporter.Error("Failed to read config file: %s", err)
 		panic("")
 	}
 
@@ -302,7 +302,7 @@ func CreateCDMLaTeXWriter(config string, reporter *mbconnect.TReporter) TCDMMode
 }
 
 func (l *TCDMModelLaTeXWriter) UpdateRendering(CDMModellingBusListener mbconnect.TModellingBusArtefactConnector, message string) {
-	l.reporter.Progress(message)
+	l.reporter.Progress(mbconnect.ProgressLevelBasic, "%s", message)
 	l.CurrentModel.GetStateFromBus(CDMModellingBusListener)
 	l.UpdatedModel.GetUpdatedFromBus(CDMModellingBusListener)
 	l.ConsideredModel.GetConsideredFromBus(CDMModellingBusListener)
@@ -351,7 +351,7 @@ func main() {
 	CDMLaTeXWriter := CreateCDMLaTeXWriter(config, reporter)
 	CDMLaTeXWriter.ListenForModelPostings(CDMModellingBusListener, "cdm-tester", "0001")
 
-	for true {
-		time.Sleep(1)
+	for {
+		time.Sleep(1 * time.Second)
 	}
 }

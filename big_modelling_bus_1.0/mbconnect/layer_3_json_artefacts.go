@@ -99,7 +99,7 @@ func (b *TModellingBusArtefactConnector) postDelta(deltaTopicPath string, oldSta
 		return
 	}
 
-	b.ModellingBusConnector.postJSON(deltaTopicPath, b.JSONVersion, deltaJSON, delta.Timestamp)
+	b.ModellingBusConnector.postJSON(deltaTopicPath, deltaJSON, delta.Timestamp)
 }
 
 func (b *TModellingBusArtefactConnector) applyDelta(currentJSONState json.RawMessage, deltaJSON []byte) (json.RawMessage, bool) {
@@ -193,7 +193,7 @@ func (b *TModellingBusArtefactConnector) PostState(stateJSON []byte, err error) 
 	b.UpdatedContent = stateJSON
 	b.ConsideredContent = stateJSON
 
-	b.ModellingBusConnector.postJSON(b.artefactsStateTopicPath(b.ArtefactID), b.JSONVersion, b.CurrentContent, b.CurrentTimestamp)
+	b.ModellingBusConnector.postJSON(b.artefactsStateTopicPath(b.ArtefactID), b.CurrentContent, b.CurrentTimestamp)
 
 	b.stateCommunicated = true
 }

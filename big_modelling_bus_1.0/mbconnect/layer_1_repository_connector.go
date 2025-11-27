@@ -57,14 +57,6 @@ func (r *tModellingBusRepositoryConnector) ftpEnvironmentTopicRootFor(environmen
 	return r.prefix + "/" + ModellingBusVersion + "/" + environmentID
 }
 
-func (r *tModellingBusRepositoryConnector) ftptEnvironmentTopicRoot() string {
-	return r.prefix + "/" + ModellingBusVersion + "/" + r.environmentID
-}
-
-func (r *tModellingBusRepositoryConnector) XXXAgentTopicPath(agentID, topicPath string) string {
-	return r.prefix + "/" + ModellingBusVersion + "/" + r.environmentID + "/" + agentID + "/" + topicPath
-}
-
 func (r *tModellingBusRepositoryConnector) ftpTopicPath(topicPath string) string {
 	return r.prefix + "/" + ModellingBusVersion + "/" + r.environmentID + "/" + r.agentID + "/" + topicPath
 }

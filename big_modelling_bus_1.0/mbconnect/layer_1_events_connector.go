@@ -41,16 +41,8 @@ type (
 	}
 )
 
-func (e *tModellingBusEventsConnector) mqttEnvironmentTopicRootFor(environmentID string) string {
-	return e.prefix + "/" + ModellingBusVersion + "/" + environmentID
-}
-
 func (e *tModellingBusEventsConnector) mqttEnvironmentTopicRoot() string {
 	return e.prefix + "/" + ModellingBusVersion + "/" + e.environmentID
-}
-
-func (e *tModellingBusEventsConnector) mqttEnvironmentTopics() string {
-	return e.prefix + "/" + ModellingBusVersion + "/" + e.environmentID + "/#"
 }
 
 func (e *tModellingBusEventsConnector) mqttEnvironmentTopicListFor(environmentID string) string {
@@ -63,10 +55,6 @@ func (e *tModellingBusEventsConnector) mqttAgentTopicRootFor(environmentID, agen
 
 func (e *tModellingBusEventsConnector) mqttAgentTopicPath(agentID, topicPath string) string {
 	return e.prefix + "/" + ModellingBusVersion + "/" + e.environmentID + "/" + agentID + "/" + topicPath
-}
-
-func (e *tModellingBusEventsConnector) mqttTopicPath(topicPath string) string {
-	return e.prefix + "/" + ModellingBusVersion + "/" + e.environmentID + "/" + e.agentID + "/" + topicPath
 }
 
 func (e *tModellingBusEventsConnector) connectionLostHandler(c mqtt.Client, err error) {
