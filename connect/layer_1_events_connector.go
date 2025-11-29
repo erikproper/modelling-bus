@@ -18,8 +18,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/erikproper/big-modelling-bus.go.v1/generics"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/erikproper/big-modelling-bus.go.v1/generics"
 )
 
 type (
