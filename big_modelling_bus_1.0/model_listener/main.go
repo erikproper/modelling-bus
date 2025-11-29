@@ -6,10 +6,9 @@ import (
 	"os/exec"
 	"strings"
 	"time"
-
 	"gopkg.in/ini.v1"
-	"modelling_bus_1.0/mbconnect"
-	"modelling_bus_1.0/mblanguages/cdm"
+	"modelling_bus_1.0/connect"
+	"modelling_bus_1.0/languages/cdm"
 )
 
 const (

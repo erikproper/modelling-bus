@@ -3,9 +3,10 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"modelling_bus_1.0/mbconnect"
-	"modelling_bus_1.0/mblanguages/cdm"
 	"os"
+
+	mbconnect "modelling_bus_1.0/connect"
+	"modelling_bus_1.0/languages/cdm"
 )
 
 const (
