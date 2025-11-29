@@ -13,7 +13,7 @@
  *
  */
 
-package mbconnect
+package generics
 
 import (
 	"fmt"

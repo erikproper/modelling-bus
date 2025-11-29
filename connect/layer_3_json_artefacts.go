@@ -12,7 +12,7 @@
  *
  */
 
-package mbconnect
+package connect
 
 import (
 	"encoding/json"

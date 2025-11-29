@@ -12,12 +12,11 @@
  *
  */
 
-package mbconnect
+package connect
 
 import (
 	"strings"
 	"time"
-
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 

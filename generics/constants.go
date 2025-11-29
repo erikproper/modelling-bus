@@ -12,7 +12,7 @@
  *
  */
 
-package mbconnect
+package generics
 
 const (
 	ModellingBusVersion = "bus-version-1.0" // The current version of the BIG modelling bus.

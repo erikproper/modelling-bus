@@ -19,7 +19,7 @@
  *
  */
 
-package mbconnect
+package generics
 
 import (
 	"gopkg.in/ini.v1"

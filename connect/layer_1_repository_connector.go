@@ -12,13 +12,12 @@
  *
  */
 
-package mbconnect
+package connect
 
 import (
 	"os"
 	"path/filepath"
 	"strings"
-
 	"github.com/secsy/goftp"
 )
 
