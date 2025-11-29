@@ -17,6 +17,7 @@ package connect
 import (
 	"encoding/json"
 	"os"
+
 	"github.com/erikproper/big-modelling-bus.go.v1/generics"
 )
 

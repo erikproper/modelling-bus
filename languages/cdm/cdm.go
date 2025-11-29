@@ -15,6 +15,7 @@ package cdm
 
 import (
 	"encoding/json"
+
 	"github.com/erikproper/big-modelling-bus.go.v1/connect"
 	"github.com/erikproper/big-modelling-bus.go.v1/generics"
 )
@@ -30,10 +31,10 @@ type (
 	}
 
 	TCDMModel struct {
-		ModelName                  string                                   `json:"model name"`
+		ModelName                  string                                 `json:"model name"`
 		ModellingBusArtefactPoster connect.TModellingBusArtefactConnector `json:"-"`
-		TypeIDCount                int                                      `json:"-"`
-		InstanceIDCount            int                                      `json:"-"`
+		TypeIDCount                int                                    `json:"-"`
+		InstanceIDCount            int                                    `json:"-"`
 
 		// For types
 		TypeName map[string]string `json:"type names"`

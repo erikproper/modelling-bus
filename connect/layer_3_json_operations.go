@@ -16,7 +16,8 @@ package connect
 
 import (
 	"encoding/json"
-	"github.com/evanphx/json-patch"
+
+	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/wI2L/jsondiff"
 )
 
