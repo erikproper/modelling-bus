@@ -83,7 +83,7 @@ func (e *tModellingBusEventsConnector) collectTopicsForModellingEnvironment(envi
 				e.currentMessages[topic] = payload
 			} else {
 				if _, defined := e.openingMessages[topic]; !defined {
-					e.openingMessages[topic] = ""fkkfkf
+					e.openingMessages[topic] = []byte{}
 				}
 				e.currentMessages[topic] = payload
 			}
