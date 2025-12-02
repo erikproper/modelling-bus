@@ -1,5 +1,5 @@
-BIG Modelling Bus Module
-===
+BIG Modelling Bus Go Module
+===========================
 
 RAW COPY from MQTT client. Just to see what the syntax is of this file.
 

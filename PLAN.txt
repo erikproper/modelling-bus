@@ -1,5 +1,35 @@
+[ ] After opening (and waiting), do keep adding messages to the bus state.
+    But, stop writing to the original_state
+    That way we can detect if message is new.
+    Or rather ....
+    - General /# handler:
+      - At opening:
+        OpeningState[t] = message
+        CurrentState[t] = message
+      - After opening:
+        OpeningState[t] = ''
+        CurrentState[t] = message
+    - Topic specific handler:
+      - if OpeningState[t] != message then:
+           handle(message)
+
 [ ] Reporting levels as flag + flags module
-https://go.dev/blog/publishing-go-modules
+
+[ ] Command lines:
+mbus 
+  -config <xxx>.ini
+  -post_raw_artefact    <t> <file>
+  -post_json_artefact.  <t> [<json>]
+  -post_observation     <t> [<json>]
+  -post_coordination    <t> [<json>]
+  -get_raw_artefact     <t> <local_file>
+  -get_json_artefact    <t> [<file_name>]
+  -listen_raw_artefact  <t> <file> 
+  -listen_json_artefact <t> [<file_name>] [-repeat]
+  -listen_observation.  <t> [<file_name>] [-repeat]
+  -listen_coordination  <t> [<file_name>] [-repeat]
+  -delete <t>
+  -delete_experiment <e>
 
 [ ] CDM listener and poster as cdm rest repos
 
@@ -134,3 +164,4 @@ Client 3:
 sub/predicate/object
 
 
+https://go.dev/blog/publishing-go-modules
