@@ -19,15 +19,8 @@ import (
 )
 
 const (
-	rawArtefactsFilePathElement = "artefacts/file"
+	rawArtefactsFilePathElement = "artefacts/raw"
 )
-
-func (b *TModellingBusConnector) rawArtefactPath(context, format, fileName string) string {
-	return rawArtefactsFilePathElement +
-		"/" + context +
-		"/" + format +
-		"/" + fileName
-}
 
 /*
  *
@@ -35,25 +28,21 @@ func (b *TModellingBusConnector) rawArtefactPath(context, format, fileName strin
  *
  */
 
-func (b *TModellingBusConnector) PostRawArtefact(context, format, fileName, localFilePath string) {
-	b.postFile(b.rawArtefactPath(context, format, fileName), localFilePath)
+func (b *TModellingBusConnector) PostRawArtefact(topicPath, localFilePath string) {
+	b.postFile(topicPath, localFilePath)
 }
 
-func (b *TModellingBusConnector) ListenForRawArtefactPostings(agentID, context, format, fileName string, postingHandler func(string)) {
-	topicPath := b.rawArtefactPath(context, format, fileName)
-
+func (b *TModellingBusConnector) ListenForRawArtefactPostings(agentID, topicPath string, postingHandler func(string)) {
 	b.listenForFilePostings(agentID, topicPath, generics.JSONFileName, func(localFilePath, _ string) {
 		postingHandler(localFilePath)
 	})
 }
 
-func (b *TModellingBusConnector) GetRawArtefact(agentID, context, format, fileName, localFileName string) string {
-	topicPath := b.rawArtefactPath(context, format, fileName)
-
+func (b *TModellingBusConnector) GetRawArtefact(agentID, topicPath, localFileName string) string {
 	localFilePath, _ := b.getFileFromPosting(agentID, topicPath, localFileName)
 	return localFilePath
 }
 
-func (b *TModellingBusConnector) DeleteRawArtefact(context, format, fileName string) {
-	b.deletePosting(b.rawArtefactPath(context, format, fileName))
+func (b *TModellingBusConnector) DeleteRawArtefact(topicPath string) {
+	b.deletePosting(topicPath)
 }

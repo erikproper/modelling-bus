@@ -39,7 +39,7 @@ func (b *TModellingBusConnector) postFile(topicPath, localFilePath string) {
 
 	message, err := json.Marshal(event)
 	if err != nil {
-		b.reporter.Error("Something went wrong JSONing the link data. %s", err)
+		b.Reporter.Error("Something went wrong JSONing the link data. %s", err)
 		return
 	}
 
@@ -73,7 +73,7 @@ func (b *TModellingBusConnector) postJSON(topicPath string, jsonMessage []byte, 
 
 	message, err := json.Marshal(event)
 	if err != nil {
-		b.reporter.Error("Something went wrong JSONing the link data. %s", err)
+		b.Reporter.Error("Something went wrong JSONing the link data. %s", err)
 		return
 	}
 
@@ -85,8 +85,8 @@ func (b *TModellingBusConnector) getJSONFromTemporaryFile(tempFilePath, timestam
 	os.Remove(tempFilePath)
 
 	if err != nil {
-		b.reporter.Error("Something went wrong while retrieving file. %s", err)
-		b.reporter.Error("Temporary file to be opened: %s", tempFilePath)
+		b.Reporter.Error("Something went wrong while retrieving file. %s", err)
+		b.Reporter.Error("Temporary file to be opened: %s", tempFilePath)
 		return []byte{}, ""
 	}
 
@@ -129,7 +129,7 @@ func (b *TModellingBusConnector) DeleteEnvironment(environment ...string) {
 		environmentToDelete = environment[0]
 	}
 
-	b.reporter.Progress(1, "Deleting environment: %s", environmentToDelete)
+	b.Reporter.Progress(1, "Deleting environment: %s", environmentToDelete)
 
 	b.modellingBusEventsConnector.deleteEnvironment(environmentToDelete)
 	b.modellingBusRepositoryConnector.deleteEnvironment(environmentToDelete)
@@ -140,21 +140,21 @@ func CreateModellingBusConnector(configData *generics.TConfigData, reporter *gen
 	modellingBusConnector.environmentID = configData.GetValue("", "environment").String()
 	modellingBusConnector.agentID = configData.GetValue("", "agent").String()
 	modellingBusConnector.configData = configData
-	modellingBusConnector.reporter = reporter
+	modellingBusConnector.Reporter = reporter
 
 	modellingBusConnector.modellingBusRepositoryConnector =
 		createModellingBusRepositoryConnector(
 			modellingBusConnector.environmentID,
 			modellingBusConnector.agentID,
 			modellingBusConnector.configData,
-			modellingBusConnector.reporter)
+			modellingBusConnector.Reporter)
 
 	modellingBusConnector.modellingBusEventsConnector =
 		createModellingBusEventsConnector(
 			modellingBusConnector.environmentID,
 			modellingBusConnector.agentID,
 			modellingBusConnector.configData,
-			modellingBusConnector.reporter)
+			modellingBusConnector.Reporter)
 
 	return modellingBusConnector
 }

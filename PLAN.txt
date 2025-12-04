@@ -3,15 +3,16 @@ mbus
   -config <xxx>.ini
   ---
   -topic <t>
-  -post_raw_artefact    <file>
-  -post_json_artefact   [<json>]
   -post_observation     [<json>]
   -post_coordination    [<json>]
+
   -get_raw_artefact     <local_file>
   -get_json_artefact    [<file_name>]
+
+  The -repeat Requires a link to a command that accepts file/input
   -listen_raw_artefact  <file> 
   -listen_json_artefact [<file_name>] [-repeat]
-  -listen_observation.  [<file_name>] [-repeat]
+  -listen_observation   [<file_name>] [-repeat]
   -listen_coordination  [<file_name>] [-repeat]
   -delete
   ---
