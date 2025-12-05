@@ -68,7 +68,7 @@ func (b *TModellingBusConnector) ListenForRawObservationPostings(agentID, observ
 // HERE!
 func (b *TModellingBusConnector) ListenForJSONObservationPostings(agentID, topicPath string, postingHandler func([]byte, string)) {
 	b.listenForFilePostings(agentID, topicPath, generics.JSONFileName, func(localFilePath, timestamp string) {
-		postingHandler(getJSONFromTemporaryFile(localFilePath, timestamp))
+		postingHandler(b.getJSONFromTemporaryFile(localFilePath, timestamp))
 	})
 
 	//	b.listenForJSONPostings(agentID, b.jsonArtefactsUpdateTopicPath(artefactID), func(json []byte, _ string) {
