@@ -265,9 +265,8 @@ func (b *TModellingBusArtefactConnector) ListenForJSONArtefactConsideringPosting
  * Retrieving artefact states
  */
 
-func (b *TModellingBusArtefactConnector) GetRawArtefactState(agentID, topicPath, localFileName string) string {
-	localFilePath, _ := b.ModellingBusConnector.getFileFromPosting(agentID, topicPath, localFileName)
-	return localFilePath
+func (b *TModellingBusArtefactConnector) GetRawArtefactState(agentID, topicPath, localFileName string) (string, string) {
+	return b.ModellingBusConnector.getFileFromPosting(agentID, topicPath, localFileName)
 }
 
 func (b *TModellingBusArtefactConnector) GetJSONArtefactState(agentID, artefactID string) {
