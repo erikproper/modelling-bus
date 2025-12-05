@@ -110,7 +110,7 @@ func (b *TModellingBusArtefactConnector) postJSONDelta(deltaTopicPath string, ol
 		return
 	}
 
-	b.ModellingBusConnector.postJSON(deltaTopicPath, deltaJSON, delta.Timestamp)
+	b.ModellingBusConnector.postJSONAsFile(deltaTopicPath, deltaJSON, delta.Timestamp)
 }
 
 func (b *TModellingBusArtefactConnector) applyJSONDelta(currentJSONState json.RawMessage, deltaJSON []byte) (json.RawMessage, bool) {
@@ -195,7 +195,7 @@ func (b *TModellingBusArtefactConnector) PostJSONArtefactState(stateJSON []byte,
 	b.UpdatedContent = stateJSON
 	b.ConsideredContent = stateJSON
 
-	b.ModellingBusConnector.postJSON(b.jsonArtefactsStateTopicPath(b.ArtefactID), b.CurrentContent, b.CurrentTimestamp)
+	b.ModellingBusConnector.postJSONAsFile(b.jsonArtefactsStateTopicPath(b.ArtefactID), b.CurrentContent, b.CurrentTimestamp)
 
 	b.stateCommunicated = true
 }
@@ -239,14 +239,14 @@ func (b *TModellingBusArtefactConnector) ListenForRawArtefactStatePostings(agent
 }
 
 func (b *TModellingBusArtefactConnector) ListenForJSONArtefactStatePostings(agentID, artefactID string, handler func()) {
-	b.ModellingBusConnector.listenForJSONPostings(agentID, b.jsonArtefactsStateTopicPath(artefactID), func(json []byte, currentTimestamp string) {
+	b.ModellingBusConnector.listenForJSONFilePostings(agentID, b.jsonArtefactsStateTopicPath(artefactID), func(json []byte, currentTimestamp string) {
 		b.updateCurrentJSONArtefact(json, currentTimestamp)
 		handler()
 	})
 }
 
 func (b *TModellingBusArtefactConnector) ListenForJSONArtefactUpdatePostings(agentID, artefactID string, handler func()) {
-	b.ModellingBusConnector.listenForJSONPostings(agentID, b.jsonArtefactsUpdateTopicPath(artefactID), func(json []byte, _ string) {
+	b.ModellingBusConnector.listenForJSONFilePostings(agentID, b.jsonArtefactsUpdateTopicPath(artefactID), func(json []byte, _ string) {
 		if b.updateUpdatedJSONArtefact(json) {
 			handler()
 		}
@@ -254,7 +254,7 @@ func (b *TModellingBusArtefactConnector) ListenForJSONArtefactUpdatePostings(age
 }
 
 func (b *TModellingBusArtefactConnector) ListenForJSONArtefactConsideringPostings(agentID, artefactID string, handler func()) {
-	b.ModellingBusConnector.listenForJSONPostings(agentID, b.jsonArtefactsConsideringTopicPath(artefactID), func(json []byte, _ string) {
+	b.ModellingBusConnector.listenForJSONFilePostings(agentID, b.jsonArtefactsConsideringTopicPath(artefactID), func(json []byte, _ string) {
 		if b.updateConsideringJSONArtefact(json) {
 			handler()
 		}

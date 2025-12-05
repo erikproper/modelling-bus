@@ -52,7 +52,7 @@ func (b *TModellingBusConnector) PostRawObservation(observationID, localFilePath
 }
 
 func (b *TModellingBusConnector) PostJSONObservation(observationID string, json []byte) {
-	b.postJSON(b.jsonObservationsTopicPath(observationID), json, generics.GetTimestamp())
+	b.postJSONAsFile(b.jsonObservationsTopicPath(observationID), json, generics.GetTimestamp())
 }
 
 /*

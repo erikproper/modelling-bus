@@ -68,12 +68,31 @@ func (b *TModellingBusConnector) getFileFromPosting(agentID, topicPath, localFil
 	return b.getLinkedFileFromRepository(b.modellingBusEventsConnector.messageFromEvent(agentID, topicPath), localFileName)
 }
 
-func (b *TModellingBusConnector) postJSON(topicPath string, jsonMessage []byte, timestamp string) {
+func (b *TModellingBusConnector) postJSONAsFile(topicPath string, jsonMessage []byte, timestamp string) {
 	event := b.modellingBusRepositoryConnector.addJSONAsFile(topicPath, jsonMessage, timestamp)
 
 	message, err := json.Marshal(event)
 	if err != nil {
 		b.Reporter.Error("Something went wrong JSONing the link data. %s", err)
+		return
+	}
+
+	b.modellingBusEventsConnector.postEvent(topicPath, message)
+}
+
+type tStreamEvent struct {
+	Timestamp string          `json:"timestamp"`
+	Payload   json.RawMessage `json:"payload"`
+}
+
+func (b *TModellingBusConnector) postJSONDirect(topicPath string, jsonMessage []byte, timestamp string) {
+	event := tStreamEvent{}
+	event.Timestamp = timestamp
+	event.Payload = jsonMessage
+
+	message, err := json.Marshal(event)
+	if err != nil {
+		b.Reporter.Error("Something went wrong JSONing the event. %s", err)
 		return
 	}
 
@@ -93,7 +112,7 @@ func (b *TModellingBusConnector) getJSONFromTemporaryFile(tempFilePath, timestam
 	return jsonPayload, timestamp
 }
 
-func (b *TModellingBusConnector) listenForJSONPostings(agentID, topicPath string, postingHandler func([]byte, string)) {
+func (b *TModellingBusConnector) listenForJSONFilePostings(agentID, topicPath string, postingHandler func([]byte, string)) {
 	b.modellingBusEventsConnector.listenForEvents(agentID, topicPath, func(message []byte) {
 		postingHandler(b.getJSONFromTemporaryFile(b.getLinkedFileFromRepository(message, generics.JSONFileName)))
 	})
