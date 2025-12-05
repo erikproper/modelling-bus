@@ -11,7 +11,7 @@
  *
  */
 
-package cdm.v1
+package cdm_v1
 
 import (
 	"encoding/json"
