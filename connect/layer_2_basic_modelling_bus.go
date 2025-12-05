@@ -156,14 +156,13 @@ func (b *TModellingBusConnector) listenForJSONFilePostings(agentID, topicPath st
 	})
 }
 
-
 func (b *TModellingBusConnector) listenForStreamedPostings(agentID, topicPath string, postingHandler func([]byte, string)) {
 	b.modellingBusEventsConnector.listenForEvents(agentID, topicPath, func(message []byte) {
 		event := tStreamedEvent{}
 
 		err := json.Unmarshal(message, &event)
 		if err == nil {
-			postingHandler(event.Payload, event.Timestamp
+			postingHandler(event.Payload, event.Timestamp)
 		}
 	})
 }
