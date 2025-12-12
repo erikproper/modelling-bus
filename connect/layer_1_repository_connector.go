@@ -222,14 +222,17 @@ func (r *tModellingBusRepositoryConnector) addJSONAsFile(topicPath string, json 
 	// Cleanup the temporary file afterwards
 	defer os.Remove(localFilePath)
 
+	// Add the file to the repository
 	return r.addFile(topicPath, localFilePath, timestamp)
 }
 
 func (r *tModellingBusRepositoryConnector) getFile(repositoryEvent tRepositoryEvent, fileName string) string {
+	// Configure FTP connection
 	config := goftp.Config{}
 	config.ActiveTransfers = r.activeTransfers
 	serverConnection := ""
 
+	// Determine server connection details
 	if r.singleServerMode {
 		serverConnection = r.server + ":" + r.port
 
@@ -239,21 +242,27 @@ func (r *tModellingBusRepositoryConnector) getFile(repositoryEvent tRepositoryEv
 		serverConnection = repositoryEvent.Server + ":" + repositoryEvent.Port
 	}
 
+	// Connect to the FTP server
 	client, err := goftp.DialConfig(config, serverConnection)
 	if err != nil {
 		r.reporter.Error("Something went wrong connecting to the FTP server: \"%s\"", err)
 		return ""
 	}
 
+	// Set local file path
 	localFileName := r.localFilePathFor(fileName)
 
-	// Download a File to local storage
+	// Download file to local storage
 	File, err := os.Create(localFileName)
 	if err != nil {
 		r.reporter.Error("Something went wrong creating local file: \"%s\"", err)
 		return ""
 	}
 
+	// Ensure the file is closed after operation
+	defer File.Close()
+
+	// Retrieve the file from the FTP server
 	err = client.Retrieve(repositoryEvent.FilePath, File)
 	if err != nil {
 		r.reporter.Error("Something went wrong retrieving file: \"%s\"", err)
@@ -261,13 +270,13 @@ func (r *tModellingBusRepositoryConnector) getFile(repositoryEvent tRepositoryEv
 		return ""
 	}
 
+	// Return the local file name
 	return localFileName
 }
 
 func createModellingBusRepositoryConnector(environmentID, agentID string, configData *generics.TConfigData, reporter *generics.TReporter) *tModellingBusRepositoryConnector {
+	// Create the repository connector
 	r := tModellingBusRepositoryConnector{}
-
-	r.reporter = reporter
 
 	// Get data from the config file
 	r.localWorkDirectory = configData.GetValue("", "work_folder").String()
@@ -279,23 +288,27 @@ func createModellingBusRepositoryConnector(environmentID, agentID string, config
 	r.activeTransfers = configData.GetValue("ftp", "active_transfers").BoolWithDefault(false)
 	r.prefix = configData.GetValue("ftp", "prefix").String()
 
+	// Initialising other data
+	r.reporter = reporter
 	r.agentID = agentID
 	r.environmentID = environmentID
 	r.reporter = reporter
-
 	r.createdPaths = map[string]bool{}
 
+	// Reporting on the configuration
 	if r.singleServerMode {
 		r.reporter.Progress(generics.ProgressLevelDetailed, "Running the FTP connection in single server mode.")
 	} else {
 		r.reporter.Progress(generics.ProgressLevelDetailed, "Running the FTP connection in multi server mode.")
 	}
 
+	// Reporting on the transfer mode
 	if r.activeTransfers {
 		r.reporter.Progress(generics.ProgressLevelDetailed, "Running the FTP connection in active transfer mode.")
 	} else {
 		r.reporter.Progress(generics.ProgressLevelDetailed, "Running the FTP connection in passive transfer mode.")
 	}
 
+	// Return the created repository connector
 	return &r
 }
