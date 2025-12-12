@@ -96,16 +96,17 @@ func (e *tModellingBusEventsConnector) waitForMQTT() {
 // Collect all MQTT topics for a given modelling environment
 func (e *tModellingBusEventsConnector) collectTopicsForModellingEnvironment(environmentID string) {
 	token := e.client.Subscribe(e.mqttEnvironmentTopicListFor(environmentID), 0, func(client mqtt.Client, msg mqtt.Message) {
+		// Get topic and payload
 		topic := msg.Topic()
 		payload := msg.Payload()
 
+		// Store the topic and payload
 		if len(payload) == 0 {
 			// If the payload is empty, the topic has been deleted
 			delete(e.openingMessages, topic)
 			delete(e.currentMessages, topic)
 		} else {
 			// Otherwise, store the message
-
 			if e.connectionBeingOpenened {
 				// During opening, we need to store both opening and current messages
 				e.openingMessages[topic] = payload
@@ -120,10 +121,14 @@ func (e *tModellingBusEventsConnector) collectTopicsForModellingEnvironment(envi
 			}
 		}
 	})
+
+	// Wait for the subscription to be in place
 	token.Wait()
 
+	// Wait for a while to allow messages to arrive from the MQTT bus
 	e.waitForMQTT()
 
+	// List found topics
 	if len(e.openingMessages) == 0 {
 		// No topics found
 		e.reporter.Progress(generics.ProgressLevelDetailed, "No topics found.")
@@ -150,12 +155,15 @@ func (e *tModellingBusEventsConnector) connectToMQTT(postingOnly bool) {
 	// Connecting to the MQTT broker
 	connected := false
 	for !connected {
+		// Trying to connect
 		e.reporter.Progress(generics.ProgressLevelBasic, "Trying to connect to the MQTT broker.")
 
+		// Creating the MQTT client
 		e.client = mqtt.NewClient(opts)
 		token := e.client.Connect()
 		token.Wait()
 
+		// Checking for errors
 		err := token.Error()
 		if err != nil {
 			e.reporter.Error("Error connecting to the MQTT broker. %s", err)
@@ -180,6 +188,7 @@ func (e *tModellingBusEventsConnector) connectToMQTT(postingOnly bool) {
 			e.collectTopicsForModellingEnvironment(e.environmentID)
 		}
 
+		// Mark the opening phase as finished
 		e.connectionBeingOpenened = false
 	}
 }
@@ -190,12 +199,14 @@ func (e *tModellingBusEventsConnector) connectToMQTT(postingOnly bool) {
 
 // Post a message on a given topic path
 func (e *tModellingBusEventsConnector) postMessage(topicPath string, message []byte) {
+	// Posting the message
 	token := e.client.Publish(topicPath, 0, true, string(message))
 	token.Wait()
 }
 
 // Post an event on a given topic path
 func (e *tModellingBusEventsConnector) postEvent(topicPath string, message []byte) {
+	// Posting the event
 	e.postMessage(e.mqttAgentTopicPath(e.agentID, topicPath), message)
 }
 
@@ -205,9 +216,12 @@ func (e *tModellingBusEventsConnector) postEvent(topicPath string, message []byt
 
 // Pro-actively get the (latest) message from the bus.
 func (e *tModellingBusEventsConnector) messageFromEvent(agentID, topicPath string) []byte {
+	// Getting the message
 	mqttTopicPath := e.mqttAgentTopicPath(agentID, topicPath)
 
+	// Getting the message
 	message := e.currentMessages[mqttTopicPath]
+
 	// When messageFromEvent is called too soon after opening the connection to the MQTT broker,
 	// we may not have received a message yet. So, we need to be "waitForMQTT" patient.
 	if len(message) == 0 {
@@ -224,16 +238,21 @@ func (e *tModellingBusEventsConnector) messageFromEvent(agentID, topicPath strin
 
 // Listen for events on a given topic path for a given agent
 func (e *tModellingBusEventsConnector) listenForEvents(agentID, topicPath string, eventHandler func([]byte)) {
+	// Getting the MQTT topic path
 	mqttTopicPath := e.mqttAgentTopicPath(agentID, topicPath)
 
 	// Setting up the subscription
 	token := e.client.Subscribe(mqttTopicPath, 0, func(client mqtt.Client, msg mqtt.Message) {
+		// Getting the payload
 		payload := msg.Payload()
 
+		// Calling the event handler, if necessary
 		if len(payload) > 0 && string(e.openingMessages[mqttTopicPath]) != string(payload) {
 			eventHandler(payload)
 		}
 	})
+
+	// Waiting for the subscription to be in place
 	token.Wait()
 }
 
@@ -243,19 +262,26 @@ func (e *tModellingBusEventsConnector) listenForEvents(agentID, topicPath string
 
 // Delete a given topic path
 func (e *tModellingBusEventsConnector) deletePath(topicPath string) {
+	// Deleting the path by posting an empty message
 	e.postMessage(topicPath, []byte{})
 }
 
 // Delete a given topic path
 func (e *tModellingBusEventsConnector) deletePostingPath(topicPath string) {
+	// Deleting the path by posting an empty event
 	e.postEvent(topicPath, []byte{})
 }
 
+// Delete all topics for a given modelling environment
 func (e *tModellingBusEventsConnector) deleteEnvironment(environmentID string) {
+	// Collect all topics for the given modelling environment
 	e.collectTopicsForModellingEnvironment(environmentID)
 
+	// Delete all topics for the given modelling environment
 	for topic := range e.openingMessages {
+		// Check whether the topic belongs to the given modelling environment
 		if strings.HasPrefix(topic, e.mqttAgentTopicRootFor(environmentID, e.agentID)) {
+			// Delete the topic
 			e.deletePath(topic)
 		}
 	}
@@ -265,7 +291,9 @@ func (e *tModellingBusEventsConnector) deleteEnvironment(environmentID string) {
  * Creating bus event connectors
  */
 
+// Create a modelling bus events connector
 func createModellingBusEventsConnector(environmentID, agentID string, configData *generics.TConfigData, reporter *generics.TReporter, postingOnly bool) *tModellingBusEventsConnector {
+	// Creating the events connector
 	e := tModellingBusEventsConnector{}
 
 	// Get data from the config file
@@ -275,16 +303,19 @@ func createModellingBusEventsConnector(environmentID, agentID string, configData
 	e.password = configData.GetValue("mqtt", "password").String()
 	e.prefix = configData.GetValue("mqtt", "prefix").String()
 	e.loadDelay = configData.GetValue("mqtt", "load_delay").IntWithDefault(1)
+
+	// Initialising other data
 	e.connectionBeingOpenened = true
 	e.currentMessages = map[string][]byte{}
 	e.openingMessages = map[string][]byte{}
-
 	e.agentID = agentID
 	e.environmentID = environmentID
 	e.reporter = reporter
 
+	// Connect to MQTT
 	e.connectToMQTT(postingOnly)
 
+	// Return the created events connector
 	return &e
 }
 

@@ -83,97 +83,129 @@ func (r *tModellingBusRepositoryConnector) ftpTopicPath(topicPath string) string
 
 // Connecting to the FTP server
 func (r *tModellingBusRepositoryConnector) ftpConnect() (*goftp.Client, error) {
+	// Define the FTP connection configuration
 	config := goftp.Config{}
 	config.User = r.user
 	config.Password = r.password
 	config.ActiveTransfers = r.activeTransfers
-
 	serverDefinition := r.server + ":" + r.port
+
+	// Finally, connect to the FTP server
 	client, err := goftp.DialConfig(config, serverDefinition)
 	if err != nil {
 		r.reporter.Error("Error connecting to the FTP server. %s", err)
 		return client, err
 	}
 
+	// Return the connected client
 	return client, err
 }
 
+// Make sure the given repository file path exists on the FTP server
 func (r *tModellingBusRepositoryConnector) mkRepositoryFilePath(remoteFilePath string) {
+	// Create the path on the FTP server, if not already done
 	if !r.createdPaths[remoteFilePath] {
+		// Connect to the FTP server
 		if client, err := r.ftpConnect(); err == nil {
 			pathCovered := ""
+			// Create all directories in the path, if not already existing
 			for _, Directory := range strings.Split(remoteFilePath, "/") {
 				pathCovered = pathCovered + Directory + "/"
 				client.Mkdir(pathCovered)
 			}
 
+			// Close the FTP connection
 			client.Close()
 
+			// Mark the path as created
 			r.createdPaths[remoteFilePath] = true
 		}
 	}
 }
 
+// Add a file to the repository
 func (r *tModellingBusRepositoryConnector) addFile(topicPath, localFilePath, timestamp string) tRepositoryEvent {
+	// Define the remote file path
 	remoteFilePath := r.ftpTopicPath(topicPath)
 	remotePayloadFileNamePath := remoteFilePath + "/" + generics.PayloadFileName
 
+	// Make sure the path exists on the FTP server
 	r.mkRepositoryFilePath(remoteFilePath)
 
+	// Upload the file to the FTP server
 	repositoryEvent := tRepositoryEvent{}
 	repositoryEvent.Timestamp = timestamp
 
+	// Open the local file for reading
 	file, err := os.Open(filepath.FromSlash(localFilePath))
 	if err != nil {
 		r.reporter.Error("Error opening File for reading. %s", err)
 		return repositoryEvent
 	}
 
+	// Connect to the FTP server
 	client, err := r.ftpConnect()
 	if err != nil {
 		return repositoryEvent
 	}
 
+	// Store the file on the FTP server
 	err = client.Store(remotePayloadFileNamePath, file)
+
+	// Handle potential errors
 	if err != nil {
 		r.reporter.Error("Error uploading file to ftp server. %s", err)
 		r.reporter.Error("For remote file path: %s", remotePayloadFileNamePath)
 		return repositoryEvent
 	}
 
+	// Close the local file
 	client.Close()
 
+	// Define the repository event
 	if !r.singleServerMode {
 		repositoryEvent.Server = r.server
 		repositoryEvent.Port = r.port
 	}
 	repositoryEvent.FilePath = remotePayloadFileNamePath
 
+	// Return the repository event
 	return repositoryEvent
 }
 
+// Delete a path from the repository
 func deleteRepositoryPath(client *goftp.Client, deletePath string) {
-	client.Delete(deletePath)
+	// We're not certain if deletePath refers to a file or a directory.
+
+	// So first, we try to read it as a directory.
 	fileInfos, _ := client.ReadDir(deletePath)
 	if len(fileInfos) > 0 {
+		// If it works, we delete all contents recursively, then remove the directory itself.
 		for _, fileInfo := range fileInfos {
 			deleteRepositoryPath(client, deletePath+"/"+fileInfo.Name())
 		}
 		client.Rmdir(deletePath)
+	} else {
+		// If it fails, we assume it's a file and delete it directly.
+		client.Delete(deletePath)
 	}
 }
 
 func (r *tModellingBusRepositoryConnector) deletePath(deletePath string) {
+	// Connect to the FTP server
 	if client, err := r.ftpConnect(); err == nil {
+		// Then, delete the given path from the FTP server
 		deleteRepositoryPath(client, deletePath)
 	}
 }
 
 func (r *tModellingBusRepositoryConnector) deletePostingPath(topicPath string) {
+	// Delete the path from the FTP server for the given topic path
 	r.deletePath(r.ftpTopicPath(topicPath))
 }
 
 func (r *tModellingBusRepositoryConnector) deleteEnvironment(environment string) {
+	// Delete the entere file tree from the FTP server for the given environment
 	r.deletePath(r.ftpEnvironmentTopicRootFor(environment))
 }
 
